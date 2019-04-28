@@ -1,24 +1,25 @@
-FROM centos:centos7
+FROM ubuntu:16.04
 
 ########################################################
 # Essential packages for remote debugging and login in
 ########################################################
 
-RUN yum install epel-release -y && yum update -y && yum groupinstall -y "Development Tools" \
-	yum install -y gcc openssh openssh-server cmake gdb devtoolset-7-gdb-gdbserver rsync vim \
+RUN apt-get update && apt-get upgrade -y && apt-get install -y \
+    apt-utils gcc g++ openssh-server cmake build-essential gdb gdbserver rsync vim \
+    curl python-software-properties xz-utils ruby-full autoconf git libcurl4-openssl-dev \
+    libicu-dev libssl-dev libtool ninja-build nodejs pkg-config unzip
 
 ADD . /code
 WORKDIR /code
-# Taken from - https://docs.docker.com/engine/examples/running_ssh_service/#environment-variables
 
+# Taken from - https://docs.docker.com/engine/examples/running_ssh_service/#environment-variables
+ADD cmake3.14.sh /cmake3.14.sh
 RUN mkdir /var/run/sshd
 RUN echo 'root:root' | chpasswd
-ADD sshd_config /etc/ssh/sshd_config
-ADD sshd /etc/pam.d/sshd
-#RUN sed -i 's/#PermitRootLogin no/PermitRootLogin yes/' /etc/ssh/sshd_config
-
-## SSH login fix. Otherwise user is kicked off after login
-#RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN chmod +x cmake3.14.sh && ./cmake3.14.sh
+# SSH login fix. Otherwise user is kicked off after login
+RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
 
 ENV NOTVISIBLE "in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile
