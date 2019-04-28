@@ -13,11 +13,11 @@ ADD . /code
 WORKDIR /code
 
 # Taken from - https://docs.docker.com/engine/examples/running_ssh_service/#environment-variables
-
+ADD cmake3.14 /cmake3.14.sh
 RUN mkdir /var/run/sshd
 RUN echo 'root:root' | chpasswd
 RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
-
+RUN sh -c cmake3.14.sh
 # SSH login fix. Otherwise user is kicked off after login
 RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
 
