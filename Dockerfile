@@ -20,7 +20,10 @@ RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/s
 RUN chmod +x cmake3.14.sh && ./cmake3.14.sh
 # SSH login fix. Otherwise user is kicked off after login
 RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
-
+RUN curl -fSsL https://dl.bintray.com/boostorg/release/1.66.0/source/boost_1_66_0.tar.gz -o boost.tar.gz \
+    && tar xzf boost.tar.gz \
+    && mv boost_1_66_0/boost /usr/include \
+    && rm -rf boost*
 ENV NOTVISIBLE "in users profile"
 RUN echo "export VISIBLE=now" >> /etc/profile
 
@@ -33,7 +36,10 @@ RUN echo 'debugger:pwd' | chpasswd
 ########################################################
 # Add custom packages and development environment here
 ########################################################
-
+RUN git clone https://github.com/TrustWallet/wallet-core.git \
+    && cd wallet-core \
+    && export PREFIX=/usr/local \
+    && tools/install-dependencies
 ########################################################
 
 CMD ["/usr/sbin/sshd", "-D"]
